@@ -5,23 +5,42 @@ import {
   TextInput,
   TouchableOpacity,
   SafeAreaView,
+  Keyboard,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import api from "../../services/api";
 
 const BuscaCEP = () => {
-  const [dados, setDados] = useState({});
+  const [dados, setDados] = useState(null);
   const [input, setInput] = useState();
 
+  const inputRef = useRef(null);
+
   async function buscarCEP() {
+    if (input.length !== 8 || input === null) {
+      alert("Digite 8 números.");
+      return;
+    }
+
     await api
       .get(`${input}/json/`)
-      .then((response) => setDados(response.data))
-      .catch((error) => console.log(error));
+      .then((response) => {
+        setDados(response.data);
+        Keyboard.dismiss();
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+
+  function limpar() {
+    setInput("");
+    inputRef.current.focus();
+    setDados(null);
   }
 
   return (
-    <SafeAreaView >
+    <SafeAreaView>
       <View style={styles.inputContainer}>
         <Text style={styles.text}>Digite o CEP desejado</Text>
         <TextInput
@@ -30,27 +49,36 @@ const BuscaCEP = () => {
           value={input}
           onChangeText={(texto) => setInput(texto)}
           keyboardType="numeric"
+          ref={inputRef}
         />
       </View>
 
       <View style={styles.btnArea}>
-        <TouchableOpacity style={[styles.btn, { backgroundColor: "#1d75cd"}]} onPress={buscarCEP}>
+        <TouchableOpacity
+          style={[styles.btn, { backgroundColor: "#1d75cd" }]}
+          onPress={buscarCEP}
+        >
           <Text style={styles.btnText}>Buscar CEP</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.btn, { backgroundColor: "#cd3e1d"}]} onPress={buscarCEP}>
-          <Text style={styles.btnText}>Limpar</Text>
+        <TouchableOpacity
+          style={[styles.btn, { backgroundColor: "#cd3e1d" }]}
+          onPress={buscarCEP}
+        >
+          <Text style={styles.btnText} onPress={limpar}>
+            Limpar
+          </Text>
         </TouchableOpacity>
       </View>
-
-      <View style={styles.itemContainer}>
-        <Text style={styles.itemText}>CEP: {dados.cep}</Text>
-        <Text style={styles.itemText}>Logradouro: {dados.logradouro}</Text>
-        <Text style={styles.itemText}>Complemento: {dados.complemento}</Text>
-        <Text style={styles.itemText}>Bairro: {dados.bairro}</Text>
-        <Text style={styles.itemText}>Cidade: {dados.localidade}</Text>
-        <Text style={styles.itemText}>Estado: {dados.uf}</Text>
-      </View>
-
+      {dados && (
+        <View style={styles.itemContainer}>
+          <Text style={styles.itemText}>CEP: {dados.cep}</Text>
+          <Text style={styles.itemText}>Logradouro: {dados.logradouro}</Text>
+          <Text style={styles.itemText}>Bairro: {dados.bairro}</Text>
+          <Text style={styles.itemText}>Cidade: {dados.localidade}</Text>
+          <Text style={styles.itemText}>Estado: {dados.uf}</Text>
+        </View>
+      )}
+   
     </SafeAreaView>
   );
 };
@@ -58,8 +86,8 @@ const BuscaCEP = () => {
 export default BuscaCEP;
 
 const styles = StyleSheet.create({
-  inputContainer:{
-    alignItems: 'center'
+  inputContainer: {
+    alignItems: "center",
   },
   text: {
     marginTop: 25,
@@ -96,12 +124,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
   },
-  itemContainer:{
-    justifyContent: 'center',
-    alignItems: 'center',
+  itemContainer: {
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 15,
   },
-  itemText:{
-    fontSize: 18
-  }
+  itemText: {
+    fontSize: 18,
+  },
 });
